@@ -1,6 +1,6 @@
 import time
 from datetime import datetime
-from typing import Tuple, NoReturn
+from typing import Tuple, List, Dict, NoReturn
 
 import folium
 import numpy as np
@@ -100,17 +100,39 @@ def sidebar_elements():
         clr="#1E2022",
     )
     
-    if st.sidebar.button("Создать тестовый набор данных"):
-        duration_downtime_plot()
+    equipment_list = [
+        ("УРБ-2А2", "УРБ-4Т", "ПБУ-74"),
+        ("МБШ-303", "УБН-Т", "МБШ-812", "МБШ-509", "БКМ-307", "БКМ-303"),
+        ("СБУ-115", "СБУ-125"),
+    ]
         
+    full_data_for_plot: List[Dict[str, Dict[str, Tuple]]] = []
+    for idx, fleet_name in enumerate([
+            "Серпуховской ПТСН",
+            "Челябинский ПТСН",
+            "Екатеринбургский ПТСН"
+    ]):
+        dict_fleet: Dict[str, Dict[str, Tuple]] = prepare_duration_downtime_for_plot(
+            fleet_name,
+            equipment_list[idx]
+        )
+        full_data_for_plot.append(dict_fleet)
+        
+    fleet_names_for_selectbox = [
+        list(fleet.keys())[0] for fleet in full_data_for_plot
+    ]
     selected_fleet_equipment = st.selectbox(
         "Выберите парк спец. техники",
-        []
+        fleet_names_for_selectbox
     )
     
-    
-def time_step_gen_base(A: float = 100, b: float = 1.56) -> float:
-    return A*np.random.weibull(b)
+    selected_data_for_plot: Dict[str, Tuple] = [
+        fleet[selected_fleet_equipment]
+        for fleet in full_data_for_plot
+        if selected_fleet_equipment in fleet.keys()
+    ][0]
+    # st.write(selected_data_for_plot["УРБ-2А2"][0])
+    duration_downtime_plot(selected_data_for_plot)
 
 
 def trend_for_duration_downtime(
@@ -126,59 +148,78 @@ def trend_for_duration_downtime(
     x = np.arange(N)
     trend = A*np.exp(-b*x)*np.sin(freq*x) + offset
     return Series(trend)
-
-
-def var_for_duration_downtime():
-    """
-    Возвращает детерминированную модель изменения
-    дисперсии временного ряда
-    """
-    pass
     
 
-def duration_downtime_plot() -> NoReturn:
+def create_start_date_str() -> str:
     """
-    Отрисовывает несколько временных рядов прдолжительности проестоев
+    Возвращает файковую дату в формате строки
     """
-    df_args = (
-        dict(start_date="2020/5/14", days=250, seed=42),
-        dict(start_date="2020/7/18", days=200, seed=2),
-        dict(start_date="2020/4/3", days=180, seed=4242),
-    )
+    fake_day = np.random.randint(1, 30)
+    fake_month = np.random.randint(1, 12)
+    return f"2020/{fake_month}/{fake_day}"
     
-    labels = (
-        "Установка УРБ-2А2",
-        "Установка УРБ-4Т",
-        "Установка ПБУ-74"
-    )
+
+def prepare_duration_downtime_for_plot(
+        fleet_name: str,
+        equipment_names: List[str]
+) -> Dict[str, Dict[str, Tuple]]:
+    """
+    Возвращает словарь {
+        "имя_парка" : {
+            "модель_техники" :
+                (массив временных меток,
+                 массив значений продолжительности простоя),
+            ...
+        }
+    }
+    для нескольких машин одного парка
+    """
+    equipment_num = len(equipment_names)
+    lst_dicts_for_equipment = [ # создает список словарей для каждой единицы техники
+        dict(
+            start_date=create_start_date_str(),
+            days=np.random.randint(135, 210)
+        ) for _ in range(equipment_num)
+    ]
     
-    line_attrs = (
-        dict(color="firebrick", width=1.5),
-        dict(color="royalblue", width=1.5),
-        dict(color="green", width=1.5)
-    )
-    
-    fig = go.Figure()
-    
-    for idx in range(3):
-        df = create_fake_data(**df_args[idx])
+    dict_date_idx_dur_dt = {}
+    for idx in range(equipment_num):
+        df = create_fake_data(**lst_dicts_for_equipment[idx])
+
+        date_idx = df.loc[:, "Дата"]
         duration_dt = Series( # аддитивно-мультипликативная модель временного ряда
             df.loc[:, "Продолжительность простоя"].apply(
                 lambda elem: elem.seconds/(60*60)
+            )) + trend_for_duration_downtime(
+                A = 5*np.random.randn() + 20,
+                freq = 10**(-2)*np.random.randn() + 0.05,
+                N = lst_dicts_for_equipment[idx]["days"]
             )
-        ) + trend_for_duration_downtime(
-            A = 5*np.random.randn() + 20,
-            freq = 10**(-2)*np.random.randn() + 0.05,
-            N = df_args[idx]["days"]
-        )
-        
-        date_idx = df.loc[:, "Дата"]
-        
+        dict_date_idx_dur_dt[equipment_names[idx]] = (date_idx, duration_dt)
+    
+    return {f"{fleet_name}" : dict_date_idx_dur_dt}
+    
+
+
+def duration_downtime_plot(
+    data: Dict[str, Tuple]
+) -> NoReturn:
+    """
+    Отрисовывает несколько временных рядов прдолжительности простоев,
+    ассоциированных с заданной маркой спец. техники для
+    заданного парка
+    """
+    equipment_names = list(data.keys())
+    
+    fig = go.Figure()
+    
+    for idx, eq_name in enumerate(equipment_names):
+        equipment = data[eq_name]
         fig.add_trace(go.Scatter(
-            x=date_idx,
-            y=duration_dt.rolling(window=7).mean(),
-            name=labels[idx],
-            line=line_attrs[idx],
+            x=equipment[0],
+            y=equipment[1].rolling(window=7).mean(),
+            name=eq_name,
+            # line=...,
             mode="lines+markers"
         ))
         
@@ -261,17 +302,15 @@ def create_fake_timestamp_and_timedelta() -> Tuple[pd.Timestamp, pd.Timedelta]:
             datetime(2020, 1, 1, fake_hour, fake_minute, fake_second)),
         pd.Timedelta( # файковое смещение по времени
             "{time_step} hours".format(
-                **{"time_step" : time_step_gen_base(80, 2.5)}
+                **{"time_step" : np.random.randint(5, 100)}
             )
         )
     )
 
 
-@st.cache
 def create_fake_data(
-    start_date: str = "2020/07/18",
-    days: int = 10,
-    seed: int = 42
+    start_date: str = "2020/7/18",
+    days: int = 10
 ) -> DataFrame:    
     downtime_type = np.array([
         "Аварийный",
@@ -282,22 +321,23 @@ def create_fake_data(
         "Погодный"
     ])
     
-    datetime_idx_list = []
+    date_idx_list = []
     start_time_end_time_delta = []
     for _ in np.arange(days):
         start_date = pd.Timestamp(
             (pd.Timestamp(start_date) + pd.Timedelta(
                 "{time_step:.0f} hours".format(
-                    **{"time_step" : time_step_gen_base()}
+                    **{"time_step" : np.random.randint(5, 100)}
                 )
-            )).strftime("%Y/%m/%d"))
+            )).strftime("%Y/%m/%d")
+        )
     
-        timestamp, timedelta = create_fake_timestamp_and_timedelta()
-        datetime_idx_list.append(start_date)
+        start_timestamp, timedelta = create_fake_timestamp_and_timedelta()
+        date_idx_list.append(start_date)
         start_time_end_time_delta.append(
             (
-                datetime.time(timestamp),
-                datetime.time(timestamp + timedelta),
+                datetime.time(start_timestamp),
+                datetime.time(start_timestamp + timedelta),
                 timedelta
             )
         )
@@ -312,21 +352,22 @@ def create_fake_data(
     
     data_fake = pd.concat([
         DataFrame({
-            "Дата" : datetime_idx_list,
+            "Дата" : date_idx_list,
             "Тип простоя" : downtime_type[
-                np.random.RandomState(seed).randint(0, len(downtime_type), size=days)
+                np.random.randint(0, len(downtime_type), size=days)
             ]
         }),
         start_time_end_time_delta_df
     ], axis=1)
     
-    economic_costs = 10000*np.random.RandomState(seed).randn(days) + 20000
+    economic_costs = 10000*np.random.randn(days) + 20000
     data_fake = pd.concat([
         data_fake,
         DataFrame(
             economic_costs,
             columns=["Экономические потери, руб."]
     )], axis=1)
+
     return data_fake
 
 
