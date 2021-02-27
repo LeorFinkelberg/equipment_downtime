@@ -547,7 +547,6 @@ def create_fake_timestamp_and_timedelta() -> Tuple[pd.Timestamp, pd.Timedelta]:
     )
 
 
-@st.cache
 def create_fake_data(
     start_date: str = "2020/7/18", days: int = 10
 ) -> DataFrame:
