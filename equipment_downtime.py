@@ -1,18 +1,14 @@
-import time
 from datetime import datetime
 from typing import Tuple, List, Dict, NoReturn
 
-import folium
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 import plotly.graph_objects as go
 from pandas import DataFrame, Series
 
 import streamlit as st
-from streamlit_folium import folium_static
 
-from css import annotation_css, annotation_css_sidebar, header_css, logo_css
+from css import annotation_css_sidebar, header_css, logo_css
 
 title_app = "Панель инструментов анализа простоев техники"
 
@@ -256,7 +252,7 @@ def duration_downtime_plot(
     
     fig = go.Figure()
     
-    for idx, eq_name in enumerate(equipment_names):
+    for eq_name in equipment_names:
         equipment = data[eq_name]
         fig.add_trace(go.Scatter(
             x=equipment[0],
@@ -352,7 +348,7 @@ def duration_downtime_boxplot(
     
     fig = go.Figure()
     
-    for idx, eq_name in enumerate(equipment_names):
+    for eq_name in equipment_names:
         equipment = data[eq_name]
         fig.add_trace(go.Box(
             x=equipment[1].rolling(window=7).mean(),
@@ -425,8 +421,7 @@ def duration_downtime_econ_costs_scatter_plot(
     
     fig = go.Figure()
     
-    outliers = []
-    for idx, eq_name in enumerate(equipment_names):
+    for eq_name in equipment_names:
         equipment = data[eq_name]
         duration_downtime = equipment[1].rolling(window=7).mean()
         economic_costs = equipment[2].rolling(window=7).mean()
