@@ -66,9 +66,9 @@ def main_elements():
                 "можно только тестовым набором данных, который генерируется "
                 "при первой загрузке страницы или её последующих обновлениях"
             )
-    
+
     row3_1, row3_2 = st.beta_columns([1, 3])
-    
+
     with row3_1:
         pass
     with row3_2:
@@ -76,7 +76,7 @@ def main_elements():
             "ВАЖНО: в демонстрационной версии приложении используется "
             "автоматически генерируемый набор данных, обновляемый при "
             "взаимодействии с любым динамическим виджетом приложения",
-            clr="#769FCD"
+            clr="#769FCD",
         )
 
     equipment_list = [
@@ -109,8 +109,10 @@ def main_elements():
 
     # отображение
     summary_table(selected_fleet_equipment, selected_data_for_plot)
-    
-    annotation_css("Детали сводки", size=18, text_align="center", clr="#07689F")
+
+    annotation_css(
+        "Детали сводки", size=18, text_align="center", clr="#07689F"
+    )
     duration_downtime_plot(selected_fleet_equipment, selected_data_for_plot)
     duration_downtime_boxplot(selected_fleet_equipment, selected_data_for_plot)
     duration_downtime_econ_costs_scatter_plot(
@@ -246,10 +248,7 @@ def prepare_duration_downtime_for_plot(
     return {f"{fleet_name}": dict_date_idx_dur_dt_eco_costs}
 
 
-def summary_table(
-    fleet_name: str,
-    data: Dict[str, Tuple]
-) -> NoReturn:
+def summary_table(fleet_name: str, data: Dict[str, Tuple]) -> NoReturn:
     """
     Возвращает фейковую сводку по ключевым показателям
     эксплуатации единиц техники
@@ -258,92 +257,97 @@ def summary_table(
         f"Аналитическая сводка ({fleet_name})",
         size=18,
         text_align="center",
-        clr="#07689F"
+        clr="#07689F",
     )
-    
-    st.markdown(f"*На объекте задействованно **{len(data.keys())}** единиц(ы) техники*")
-    
+
+    st.markdown(
+        f"*На объекте задействованно **{len(data.keys())}** единиц(ы) техники*"
+    )
+
     catogories_downtime = [
         "Погодный",
         "Регламентный",
         "Логистический",
         "Технологический",
-        "Почвенный"
+        "Почвенный",
     ]
     moda_cat_downtime = np.random.choice(catogories_downtime)
-    prcnt_cat_downtime = 100*np.random.rand()
+    prcnt_cat_downtime = 100 * np.random.rand()
     threshold_downtime_left = 43.27
     threshold_downtime_right = 81.63
     st.markdown(
         f"*Наиболее частый тип простоя: **{moda_cat_downtime}** "
         "(составляет **{:.2f}%)** *".format(
             prcnt_cat_downtime
-            if threshold_downtime_left < prcnt_cat_downtime < threshold_downtime_right else
-            (
-                 threshold_downtime_left
-                 if prcnt_cat_downtime < threshold_downtime_left
-                 else threshold_downtime_right
+            if threshold_downtime_left
+            < prcnt_cat_downtime
+            < threshold_downtime_right
+            else (
+                threshold_downtime_left
+                if prcnt_cat_downtime < threshold_downtime_left
+                else threshold_downtime_right
             )
         )
     )
-    
+
     num_precedent = np.random.randint(13, 58)
     st.markdown(
         "*Зарегистрировано в общей сложности "
-         f"**{num_precedent}** прецедент(а/ов) простоя техники*"
+        f"**{num_precedent}** прецедент(а/ов) простоя техники*"
     )
-    
+
     num_equipment_maintenance = np.random.randint(1, 3)
-    economic_costs_total = 25000*np.random.randn() + 100000
+    economic_costs_total = 25000 * np.random.randn() + 100000
     st.markdown(
         f"*На основании истории ремонтов ожидается, что "
         f"**{num_equipment_maintenance}** единиц(а/ы) потребуют внепланового "
         f"технического обслуживания на среднюю сумму **{economic_costs_total:.3f}, руб.** *"
     )
-    
+
     summary_df = DataFrame.from_dict(
-        { row : (
-            150*np.random.randn() + 500,
-            100*np.random.ranf(),
-            100*np.random.ranf(),
-            np.random.randint(350, 2500),
-            15000*np.random.randn() + 100000
-          ) for row in data.keys() },
+        {
+            row: (
+                150 * np.random.randn() + 500,
+                100 * np.random.ranf(),
+                100 * np.random.ranf(),
+                np.random.randint(350, 2500),
+                15000 * np.random.randn() + 100000,
+            )
+            for row in data.keys()
+        },
         orient="index",
         columns=[
             "Суммарное время простоя от начала эксплуатации, час",
             "Процент вовлеченности единицы техники на объекте",
             "Процент загруженности единицы техники на объекте",
             "Время до внепланового ТО (рекомендация), час",
-            "Приведенные экономические потери, руб.*"
-            ]
+            "Приведенные экономические потери, руб.*",
+        ],
     )
     st.table(summary_df)
-    
+
     equipment_names = data.keys()
     equipment_irrational = np.random.choice(
-        list(equipment_names),
-        size=np.random.randint(1,3),
-        replace=False
+        list(equipment_names), size=np.random.randint(1, 3), replace=False
     )
-    
+
     frame_for_html_list = "<ul>{}</ul>"
     html_list = frame_for_html_list.format(
-        "".join(["<li>{}</li>".format(elem) for elem in equipment_irrational])
+        "".join([f"<li>{elem}</li>" for elem in equipment_irrational])
     )
 
     annotation_css(
         text="<i>Эксплуатация следующих объектов нецелесообрзна "
         f"по показателю <b>приведенной стоимости владения</b>: "
         f"{html_list}",
-        clr="#C5304A"
+        clr="#C5304A",
     )
     st.markdown(
         "_Рекомендуется рассмотреть сценарий лизинга. "
         "Например, [СберЛизинг](https://www.sberleasing.ru/leasing/otraslevye-resheniya/)_"
     )
-    
-    
+
+
 def duration_downtime_plot(
     fleet_name: str, data: Dict[str, Tuple]
 ) -> NoReturn:
