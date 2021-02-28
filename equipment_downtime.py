@@ -262,7 +262,7 @@ def summary_table(
         clr="#07689F"
     )
     
-    st.markdown(f"*На объекте задействованно {len(data.keys())} единиц(ы) техники*")
+    st.markdown(f"*На объекте задействованно **{len(data.keys())}** единиц(ы) техники*")
     
     catogories_downtime = [
         "Погодный",
@@ -276,8 +276,8 @@ def summary_table(
     threshold_downtime_left = 43.27
     threshold_downtime_right = 81.63
     st.markdown(
-        f"*Наиболее частый тип простоя: {moda_cat_downtime} "
-        "(составляет {:.2f}%)*".format(
+        f"*Наиболее частый тип простоя: **{moda_cat_downtime}** "
+        "(составляет **{:.2f}%)** *".format(
             prcnt_cat_downtime
             if threshold_downtime_left < prcnt_cat_downtime < threshold_downtime_right else
             (
@@ -291,15 +291,15 @@ def summary_table(
     num_precedent = np.random.randint(13, 58)
     st.markdown(
         "*Зарегистрировано в общей сложности "
-         f"{num_precedent} прецедент(а/ов) простоя техники*"
+         f"**{num_precedent}** прецедент(а/ов) простоя техники*"
     )
     
     num_equipment_maintenance = np.random.randint(1, 3)
     economic_costs_total = 25000*np.random.randn() + 100000
     st.markdown(
         f"*На основании истории ремонтов ожидается, что "
-        f"{num_equipment_maintenance} единиц(а/ы) потребуют внепланового "
-        f"технического обслуживания на среднюю сумму {economic_costs_total:.3f}, руб.*"
+        f"**{num_equipment_maintenance}** единиц(а/ы) потребуют внепланового "
+        f"технического обслуживания на среднюю сумму **{economic_costs_total:.3f}, руб.** *"
     )
     
     summary_df = DataFrame.from_dict(
