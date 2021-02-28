@@ -37,11 +37,12 @@ def subheader_css(text: str = "", clr: str = "black") -> NoReturn:
 
 
 def annotation_css(
-    text: str = "", clr: str = "black", size: int = 15
+    text: str = "", font_family: str = "Helvetica", text_align: str = "justify",
+    clr: str = "black", size: int = 15
 ) -> NoReturn:
     st.markdown(
-        f"<h2 style='font-family: Helvetica, sans-serif;"
-        f"line-height: 1.2; text-align: justify; font-size: {size}px;"
+        f"<h2 style='font-family: {font_family}, sans-serif;"
+        f"line-height: 1.2; text-align: {text_align}; font-size: {size}px;"
         f"color: {clr}'><i>{text}</i>",
         unsafe_allow_html=True,
     )
