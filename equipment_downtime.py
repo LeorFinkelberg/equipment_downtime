@@ -23,7 +23,7 @@ def main_elements():
     Создает шапку страницы
     """
     # === Верхняя часть шапки ===
-    row1_1, row1_2 = st.beta_columns([2, 1])
+    row1_1, row1_2 = st.columns([2, 1])
 
     with row1_1:
         logo_css("АО РОСГЕОЛОГИЯ", align="left", clr="#07689F", size=33)
@@ -44,7 +44,7 @@ def main_elements():
         size=26,
     )
 
-    row1, row2 = st.beta_columns([2, 1])
+    row1, row2 = st.columns([2, 1])
     with row1:
         pass
 
@@ -52,7 +52,7 @@ def main_elements():
         pass
 
     # === Нижняя часть шапки ===
-    row2_1, row2_2 = st.beta_columns([3, 1])
+    row2_1, row2_2 = st.columns([3, 1])
 
     with row2_1:
         uploaded_file = st.file_uploader(
@@ -67,7 +67,7 @@ def main_elements():
                 "при первой загрузке страницы или её последующих обновлениях"
             )
 
-    row3_1, row3_2 = st.beta_columns([1, 3])
+    row3_1, row3_2 = st.columns([1, 3])
 
     with row3_1:
         pass
